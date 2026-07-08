@@ -1,0 +1,6 @@
+{
+  "name": "LeadGen AI Scraper",
+  "description": "Una herramienta para identificar negocios sin sitio web o con presencia digital obsoleta, analizando oportunidades para la integración de IA y optimización de procesos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

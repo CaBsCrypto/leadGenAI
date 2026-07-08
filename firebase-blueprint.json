@@ -1,0 +1,44 @@
+{
+  "entities": {
+    "Lead": {
+      "title": "Lead",
+      "description": "A business lead found during search.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "industry": { "type": "string" },
+        "location": { "type": "string" },
+        "phone": { "type": "string" },
+        "website": { "type": "string" },
+        "status": { "type": "string", "enum": ["no_website", "old_tech", "optimized"] },
+        "lastFound": { "type": "string", "format": "date-time" },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "analysis": { "$ref": "LeadAnalysis" },
+        "notes": { "type": "string" },
+        "crmStatus": { "type": "string", "enum": ["new", "contacted", "pitching", "closed", "rejected"] },
+        "reminderAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "userId", "createdAt"]
+    },
+    "LeadAnalysis": {
+      "title": "Lead Analysis",
+      "description": "AI generated analysis for a lead.",
+      "type": "object",
+      "properties": {
+        "analysis": { "type": "string" },
+        "useCases": { "type": "array", "items": { "type": "string" } },
+        "pitch": { "type": "string" },
+        "marketTrends": { "type": "array", "items": { "type": "string" } },
+        "competitors": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "firestore": {
+    "/saved_leads/{leadId}": {
+      "schema": "Lead",
+      "description": "Collection of leads saved by users."
+    }
+  }
+}

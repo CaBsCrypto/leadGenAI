@@ -1,0 +1,71 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Lead Validation
+    function isValidLead(data) {
+      return data.keys().hasAll(['id', 'name', 'userId', 'createdAt']) 
+        && data.id is string && data.id.size() <= 128
+        && data.name is string && data.name.size() <= 256
+        && data.userId is string && data.userId == request.auth.uid
+        && (data.status == null || data.status in ['no_website', 'old_tech', 'optimized'])
+        && (data.industry == null || (data.industry is string && data.industry.size() <= 128))
+        && (data.location == null || (data.location is string && data.location.size() <= 256))
+        && (data.phone == null || (data.phone is string && data.phone.size() <= 32))
+        && (data.website == null || (data.website is string && data.website.size() <= 512))
+        && (data.notes == null || (data.notes is string && data.notes.size() <= 4096))
+        && (data.crmStatus == null || data.crmStatus in ['new', 'contacted', 'pitching', 'closed', 'rejected'])
+        && (data.reminderAt == null || data.reminderAt is string)
+        && (data.analysis == null || (
+          data.analysis.analysis is string &&
+          data.analysis.useCases is list &&
+          data.analysis.pitch is string &&
+          (data.analysis.marketTrends == null || data.analysis.marketTrends is list) &&
+          (data.analysis.competitors == null || data.analysis.competitors is list)
+        ));
+    }
+
+    match /saved_leads/{leadId} {
+      allow get: if isOwner(existing().userId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      allow create: if isSignedIn() 
+        && isValidId(leadId) 
+        && isValidLead(incoming())
+        && incoming().createdAt == request.time;
+        
+      allow update: if isOwner(existing().userId)
+        && isValidLead(incoming())
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt;
+        
+      allow delete: if isOwner(existing().userId);
+    }
+  }
+}
